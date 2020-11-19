@@ -13,8 +13,7 @@ package com.rockets.project;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+
 
 public class Rocket {
 	private String rocketid;
@@ -22,12 +21,9 @@ public class Rocket {
 	private Long starttime;
 	private Long endtime;
 	
-
 	private List<Booster> boostersinrocket=new ArrayList<Booster>();	
-	private Lock controlthreads = new ReentrantLock();
 	
-	
-	//Método de contrucción
+	//Método de construcción del cohete.
 	public Rocket (String rocketid, int boostersnumber) throws Exception {
 		this.rocketid=rocketid;
 		this.boosternumber=boostersnumber;
@@ -43,55 +39,47 @@ public class Rocket {
 		else {
 			System.out.println("\nESTE COHETE TIENE QUE MONTAR "+ boosternumber + "PROPULSORES Y QUIERES MONTAR"+ boosterlist.size() );
 		}
-		
 	}
 	
-	//Metodo para saber si la potencia instantantea máxima ha llegado a ala potencia total del cohete
-/*	public boolean topPowerReached() {
-		if (getAllInstantPower() == getAllMaxPower()) return true;
-		else return false;
-	}*/
-	
+		
 	//Método acelerar
 	public void Thrust(int i, int powertarget, Thread t) {
-		controlthreads.lock(); //Bloqueamos el hilo para para que solo pueda acelerar un propulsor
+	//	controlthreads.lock(); //Bloqueamos el hilo para para que solo pueda acelerar un propulsor
 		try {			
 			if (getAllInstantPower() < powertarget) {
+				
 				getBoostersinrocket().get(i).ThrustBooster();
-				ViewRocket();
-				if (getAllInstantPower() == powertarget) {
-					endtime = System.nanoTime();
-				}
+			
+				ViewRocket(rocketid, i, powertarget);//Llamada al método para mostrar el estado actual de ese propulsor
+		
 			}
-
 		}finally {
 			endtime = System.nanoTime();
-			controlthreads.unlock();//Desbloqueamos el hilo
+	//		controlthreads.unlock();//Desbloqueamos el hilo
 		}
 	}
 	
 	//Método frenar
 	public void Brake(int i, int powertarget, Thread t) {
-		controlthreads.lock(); //Bloqueamos el hilo para para que solo pueda frenar un propulsor
+		//controlthreads.lock(); //Bloqueamos el hilo para para que solo pueda frenar un propulsor
 		if (getAllInstantPower() == powertarget) endtime = System.nanoTime();
 		try {			
 			if (getAllInstantPower() > powertarget) {
+			
 				getBoostersinrocket().get(i).BrakeBooster();
-				ViewRocket();
-	
+			
+				ViewRocket(rocketid, i, powertarget);
+				
 			}
 		}finally {
 			endtime = System.nanoTime();
-			controlthreads.unlock();//Desbloqueamos el hilo
+		//	controlthreads.unlock();//Desbloqueamos el hilo
 		}
 	}
 	
-	public void ViewRocket(){
-		System.out.print("\n"+ Thread.currentThread()+"- ROCKET: " +getRocketid()+ "[");
-		for(int i=0; i< getBoostersinrocket().size();i++) {
-			System.out.print(getBooster(i)); 
-		}
-		System.out.println("] ----" + getAllInstantPower() + "/" + getAllMaxPower());
+	public void ViewRocket(String rocketid, int i, int powertarget){
+		System.out.println("\n Rocket:" + rocketid + " Propulsor:" + i + " POTENCIA: "+  getBooster(i)+ " POTENCIA TOTAL: " 
+				+ getAllInstantPower() + "/" + getAllMaxPower() + " OBJETIVO:" +powertarget);
 	}
 	
 	
@@ -123,15 +111,11 @@ public class Rocket {
 	//Método para retornar la potencia instantanea total del cohete
 	public int getAllInstantPower() {
 		int allinstantpower=0;
-		for (int i = 0 ; i < getBoostersinrocket().size();i++) allinstantpower +=getBoostersinrocket().get(i).getInstantPower();
-
+		for(Booster b: boostersinrocket) allinstantpower +=b.getInstantPower();
+		//for (int i = 0 ; i < getBoostersinrocket().size();i++) allinstantpower +=getBoostersinrocket().get(i).getInstantPower();
 		return allinstantpower;
 	}
 	
-	public int getBoosterNumber() {
-		return boosternumber;
-	}
-
 	public List<Booster> getBoostersinrocket() {
 		return boostersinrocket;
 	}

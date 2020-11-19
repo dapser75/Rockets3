@@ -11,7 +11,7 @@
 
 package com.rockets.project;
 
-public class Booster implements Runnable{
+public class Booster{
 	private int maxpower=0; //Potencia máxima del propulsor
 	private int instantpower=0; //Potencia instantanea del propulspor
 
@@ -30,14 +30,6 @@ public class Booster implements Runnable{
 		
 		if (instantpower > 0) instantpower--;
 	}
-
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	
 	
 	//****************************    METODOS GETTTERS    *************************
 		

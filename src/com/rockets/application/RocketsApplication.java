@@ -2,6 +2,8 @@ package com.rockets.application;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+
 import com.rockets.persitence.RocketsRepository;
 import com.rockets.project.Booster;
 import com.rockets.project.Rocket;
@@ -32,24 +34,50 @@ public class RocketsApplication {
 		return boostersinrocket;
 	}
 
+	//Método para introducir la potencia objetivo de la carrera.
+	public void InputPower() {
+		Scanner registro = new Scanner(System.in);
+		int powertarget=0;
+		int controlbucle=0;
+		do {
+			System.out.println("\n\n-----------------------------------------------------------");
+			System.out.println("Introduce la potencia para la carrera(introduce un numero negativo para salir): ");
+			try {
+				powertarget=registro.nextInt();
+				if (powertarget < 0) System.out.println("\n----------------------------  FIN DE LA EJECUCIÓN       ----------------------------"); //Control para no introducir una potencia negativa
+				else {
+					if (CheckPowerOk(powertarget))				
+					{
+						controlbucle++;
+						StartRace(powertarget);
+						do {
+							Thread.currentThread();
+							Thread.sleep(1800);
+							
+						}while(Thread.activeCount()>1 || controlbucle==100);
+						ShowFinalTimes();//Llamada al método para mostrar los tiempos de cada ccohete
+					}
+				}
+			}catch (Exception e) {
+				System.out.println("\nEl valor introducido no es válido.");
+				registro.next();
+				powertarget=1;
+			}
+		}while (powertarget >= 0 );
+		registro.close();
+		
+	}//Fin metodo StartRaceMain
+
 	
 	//Método para empezar la carrera
 
-	public boolean StartRace(int powertarget) {
+	public void StartRace(int powertarget) {
 		List<Rocket> rockets = repository.GetAllRockets();
-		if (CheckPowerOk(powertarget)) {
+		if (CheckPowerOk(powertarget)) { //Llamada al metodo para chequear que la carrera es posible
 			for (int i=0;i<rockets.size(); i++) { 
-				
-				if (rockets.get(i).getAllInstantPower() != powertarget) StartBoosters(powertarget, rockets.get(i));
-									
-			do {
-				
-			}while(Thread.activeCount()>1);
-			
+					if (rockets.get(i).getAllInstantPower() != powertarget) StartBoosters(powertarget, rockets.get(i));
 			}
-			return true;
 		}
-		else return false;
 	}//End Start Race
 	
 	
@@ -57,15 +85,19 @@ public class RocketsApplication {
 	public void StartBoosters(int powertarget, Rocket rocket) {
 		for (int j=0; j<rocket.getBoostersinrocket().size();j++) {//Recorrer todo el array de propusores
 			if (j==0) rocket.setStartTime(System.nanoTime());
+			
 			RunRocket runrocket = new RunRocket(rocket, j,powertarget);
-			Thread t = new Thread(runrocket);
+			Thread t = new Thread(runrocket); //Creamos los hilos
+			
 			t.start();
+			
 		}
 
 	}
 	
 	
-	//Método para chequear 
+	//Método para chequear si el cohete puede alcanzar la potencia solicitada o la potencia objetivo es la potencia de partida, en ambos casos se aborta la carrera
+	
 	private boolean CheckPowerOk(int powertarget) {
 		List<Rocket> rockets = repository.GetAllRockets();
 		boolean control=true;
@@ -102,14 +134,14 @@ public class RocketsApplication {
 }
 
 
-//CLASE RUNNABLE PARA EL PROCESO QUE REALIZAMOS DE FORMA PARALELA.
+//CLASE RUNNABLE PARA LOS HILOS, QUE REALIZAMOS DE FORMA PARALELA.
 
 class RunRocket implements Runnable{
 	private Rocket rocket;
 	private int powertarget;
 	private int boosternumber;
 	
-	//Constrtuctor de clase
+	//Constructor de clase
 	public RunRocket(Rocket rocket, int boosternumber, int powertarget) {
 		this.rocket=rocket;
 		this.powertarget=powertarget;
@@ -120,7 +152,7 @@ class RunRocket implements Runnable{
 	public void run() {
 		try {
 			while((rocket.getAllInstantPower() != powertarget)) { //Se recorre el bucle hasta que no se alcance la potencia objetivo.
-				Thread.sleep(100);
+				Thread.sleep(10);
 				if (rocket.getAllInstantPower() < powertarget) {
 					rocket.Thrust(boosternumber, powertarget, Thread.currentThread());
 				} 
